@@ -1,7 +1,8 @@
 import pygame
 import sys
 from .maze import Maze_gen
-from ..graphic.character import Pacman
+from ..graphic.pacman import Pacman
+from ..graphic.ghots import Ghost
 from ..graphic.directions import Direction
 from ..graphic.pacgums import Pacgums
 
@@ -11,9 +12,7 @@ KEYS = {
     pygame.K_LEFT: Direction.LEFT,
     pygame.K_RIGHT: Direction.RIGHT,
 }
-
-
-GAP = 100 
+GAP = 100
 
 
 class Game:
@@ -29,8 +28,8 @@ class Game:
         sw, sh = self.screen.get_size()
         self.sw = sw
         self.sh = sh
-        cell = min((sw - 2 * GAP) // config.width,
-                (sh - 2 * GAP) // config.height)
+        cell = min((sw - 2 * GAP)
+            // config.width, (sh - 2 * GAP) // config.height)
         self.maze = Maze_gen(self.config, cell_size=cell)
         self.maze_pos = self.maze.surface.get_rect(
                 center=self.screen.get_rect().center).topleft
@@ -50,6 +49,14 @@ class Game:
 
         self.font = pygame.font.SysFont(None, 40)
 
+        cols, rows = len(self.maze.grid[0]), len(self.maze.grid)
+        self.ghosts = [
+            Ghost(self.maze, 0, 0, "red"),
+            Ghost(self.maze, cols - 1, 0, "pink"),
+            Ghost(self.maze, 0, rows - 1, "cyan"),
+            Ghost(self.maze, cols - 1, rows - 1, "orange"),
+            ]
+
     def _text(self, text: str, pos: tuple[int, int]) -> None:
         """Draw text centered at pos."""
         img = self.font.render(text, True, "white")
@@ -64,7 +71,7 @@ class Game:
                 if event.key == pygame.K_x:
                     self.running = False
                     print('Exit -_-')
-                    sys.exit(1)
+                    sys.exit(0)
                 elif event.key == pygame.K_SPACE:
                     print("Space bar pressed!")
                 elif event.type == pygame.KEYDOWN and event.key in KEYS:
@@ -80,11 +87,13 @@ class Game:
         self.maze.draw(self.screen, self.maze_pos)
         self.gums.draw(self.screen, self.maze_pos)
         self.pacman.draw(self.screen, self.maze_pos)
+        for ghost in self.ghosts:
+            ghost.draw(self.screen, self.maze_pos)
+
         self._text(f"SCORES: {self.score}", (GAP + 50, 50))
         self._text(f"lives: {self.lives}", (self.sw - GAP, 50))
         self._text(f"LEVEL: {self.lvl}", (GAP + 500, 50))
         self._text(f"Time: {self.time:2f}", (GAP + 1000, 50))
-
 
     def run(self):
         """Runing the game Engine"""
@@ -94,8 +103,12 @@ class Game:
             self._handle_events()
 
             self.pacman.update(self.dt)
-            self.score += self.gums.eat(self.pacman.x, self.pacman.y)
+            pac_cell = (round(self.pacman.x), round(self.pacman.y))
+            for ghost in self.ghosts:
+                ghost.goal = pac_cell
+                ghost.update(self.dt)
 
+            self.score += self.gums.eat(self.pacman.x, self.pacman.y)
             self.time -= self.dt
             if self.time <= 0:
                 self.time = 0
