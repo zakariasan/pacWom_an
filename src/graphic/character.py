@@ -21,6 +21,8 @@ class Character:
         self.maze = maze
         self.x, self.y = float(x), float(y)
         self.target = (x, y)
+        self.start = (x, y)
+
         self.color = color
         self.direction = Direction.RIGHT
         self.speed = 4

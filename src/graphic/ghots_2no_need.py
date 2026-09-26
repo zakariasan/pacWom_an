@@ -5,9 +5,9 @@ from .directions import Direction
 from ..game.maze import Maze_gen
 
 
-def next_step(grid: list[list[int]], start: tuple[int, int],
-              goal: tuple[int, int],
-              avoid: Direction | None = None) -> Direction | None:
+def path_to(grid: list[list[int]], start: tuple[int, int],
+            goal: tuple[int, int],
+            avoid: Direction | None = None) -> Direction | None:
     """First direction on the shortest path, never starting with avoid."""
     queue = [start]
     first: dict[tuple[int, int], Direction | None] = {start: None}
@@ -31,17 +31,17 @@ class Ghost(Character):
     def __init__(self, maze: Maze_gen, x: int, y: int, color: str) -> None:
         super().__init__(maze, x, y, color)
         self.goal = (x, y)
-        self.speed = 1.8
+        self.speed = 2.5
 
     def update(self, dt: float) -> None:
         """Follow the shortest path to goal, without turning back."""
         if (self.x, self.y) == self.target:
             back = next(d for d in Direction
-                        if d.dx == -self.direction.dx
-                        and d.dy == -self.direction.dy)
-            d = next_step(self.maze.grid, self.target, self.goal, back)
+                    if d.dx == -self.direction.dx
+                    and d.dy == -self.direction.dy)
+            d = path_to(self.maze.grid, self.target, self.goal, back)
             if d is None:
-                d = next_step(self.maze.grid, self.target, self.goal)
+                d = path_to(self.maze.grid, self.target, self.goal)
             if d is not None:
                 self.direction = d
         super().update(dt)
@@ -71,9 +71,9 @@ class Ghost(Character):
 class Blinky(Ghost):
     def __init__(self, maze: Maze_gen, x: int, y: int, color: str) -> None:
         super().__init__(maze, x, y, color)
-        self.goal = (x, y)
-        self.speed = 2.2
-
+        #self.goal = (x, y)
+        # self.speed = 8
+    
 
 class Pinky(Ghost):
     def choose_goal(self, pacman: Character) -> tuple[int, int]:
@@ -86,6 +86,7 @@ class Inky(Ghost):
                  blinky: Ghost) -> None:
         super().__init__(maze, x, y, color)
         self.blinky = blinky
+        # self.speed = 7
 
     def choose_goal(self, pacman: Character) -> tuple[int, int]:
         d = pacman.direction
@@ -95,6 +96,12 @@ class Inky(Ghost):
 
 
 class Clyde(Ghost):
+    def __init__(self, maze: Maze_gen, x: int, y: int, color: str,
+                 blinky: Ghost) -> None:
+        super().__init__(maze, x, y, color)
+        self.blinky = blinky
+        # self.speed = 5
+
     def choose_goal(self, pacman: Character) -> tuple[int, int]:
         dist = abs(self.x - pacman.x) + abs(self.y - pacman.y)
         if dist > 8:

@@ -2,9 +2,10 @@ import pygame
 import sys
 from .maze import Maze_gen
 from ..graphic.pacman import Pacman
-from ..graphic.ghots import Ghost
+from ..graphic.ghosts import Ghost
 from ..graphic.directions import Direction
 from ..graphic.pacgums import Pacgums
+from ..graphic.ghosts import Blinky, Clyde, Inky, Pinky
 
 KEYS = {
     pygame.K_UP: Direction.UP,
@@ -50,11 +51,13 @@ class Game:
         self.font = pygame.font.SysFont(None, 40)
 
         cols, rows = len(self.maze.grid[0]), len(self.maze.grid)
+        cols, rows = len(self.maze.grid[0]), len(self.maze.grid)
+        cols, rows = len(self.maze.grid[0]), len(self.maze.grid)
         self.ghosts = [
-            Ghost(self.maze, 0, 0, "red"),
-            Ghost(self.maze, cols - 1, 0, "pink"),
-            Ghost(self.maze, 0, rows - 1, "cyan"),
-            Ghost(self.maze, cols - 1, rows - 1, "orange"),
+            Blinky(self.maze, 0, 0, "red"),
+            Pinky(self.maze, cols - 1, 0, "pink"),
+            Inky(self.maze, 0, rows - 1, "cyan"),
+            Clyde(self.maze, cols - 1, rows - 1, "orange"),
             ]
 
     def _text(self, text: str, pos: tuple[int, int]) -> None:
@@ -105,7 +108,7 @@ class Game:
             self.pacman.update(self.dt)
             pac_cell = (round(self.pacman.x), round(self.pacman.y))
             for ghost in self.ghosts:
-                ghost.goal = pac_cell
+                ghost.goal = ghost.choose_goal(self.pacman)
                 ghost.update(self.dt)
 
             self.score += self.gums.eat(self.pacman.x, self.pacman.y)
